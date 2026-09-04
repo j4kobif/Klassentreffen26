@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klassentreffen - Fragen-Konfiguration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .panel {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .panel h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .divider {
+            height: 2px;
+            background: #e0e0e0;
+            margin-bottom: 20px;
+        }
+        
+        .question-item {
+            background: #f8f9fa;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+        }
+        
+        .question-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+        
+        .question-item.required {
+            border-left: 4px solid #28a745;
+        }
+        
+        .question-item.optional {
+            border-left: 4px solid #ffc107;
+        }
+        
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .q-number {
+            background: #667eea;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .q-controls {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .btn-small {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .btn-small:hover {
+            background: #5a6268;
+        }
+        
+        .btn-danger-small {
+            background: #dc3545;
+        }
+        
+        .btn-danger-small:hover {
+            background: #c82333;
+        }
+        
+        .q-field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .q-field label {
+            font-weight: 600;
+            font-size: 12px;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .q-field input,
+        .q-field textarea,
+        .q-field select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        .q-field textarea {
+            min-height: 60px;
+            resize: vertical;
+        }
+        
+        .q-field input:focus,
+        .q-field textarea:focus,
+        .q-field select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .type-selector {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .type-option {
+            flex: 1;
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .type-option.active {
+            border-color: #667eea;
+            background: #f0f4ff;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .type-options {
+            display: none;
+        }
+        
+        .type-options.active {
+            display: block;
+        }
+        
+        .add-option-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        
+        .add-option-btn:hover {
+            background: #5568d3;
+        }
+        
+        .option-item {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .option-item input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        
+        .option-item button {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .btn-info:hover {
+            background: #138496;
+        }
+        
+        .preview-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .preview-question {
+            background: white;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .preview-label {
+            font-weight: 600;
+            color: #333;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+        
+        .preview-input {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            color: #999;
+            font-size: 13px;
+            font-style: italic;
+        }
+        
+        .info-box {
+            background: #e8f4f8;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #333;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-content h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .modal-content textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .status-required {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-optional {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .add-question-form {
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px dashed #17a2b8;
+        }
+        
+        .add-question-form h3 {
+            color: #17a2b8;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- LINKE SEITE: BEARBEITUNG -->
+        <div class="panel">
+            <h2>⚙️ Fragen konfigurieren</h2>
+            <div class="divider"></div>
+            
+            <div class="info-box">
+                💡 <strong>Tipp:</strong> Passe die Fragen frei an deine Klasse an – beliebig viele, beliebige Reihenfolge (mit ↑/↓ sortierbar).
+            </div>
+            
+            <!-- NEUE FRAGE HINZUFÜGEN -->
+            <div class="add-question-form">
+                <h3>➕ Neue Frage hinzufügen</h3>
+                
+                <div class="q-field">
+                    <label>Emoji (optional)</label>
+                    <input type="text" id="newEmoji" maxlength="2" placeholder="z.B. 💼 oder 🎯">
+                </div>
+                
+                <div class="q-field">
+                    <label>Frage-Text *</label>
+                    <input type="text" id="newQuestion" placeholder="z.B. Was ist dein aktueller Beruf?" required>
+                </div>
+                
+                <div class="q-field">
+                    <label>Fragentyp</label>
+                    <div class="type-selector">
+                        <div class="type-option active" onclick="selectType(this, 'text')">📝 Text</div>
+                        <div class="type-option" onclick="selectType(this, 'number')">🔢 Zahl</div>
+                        <div class="type-option" onclick="selectType(this, 'select')">📋 Auswahl</div>
+                    </div>
+                    <input type="hidden" id="newType" value="text">
+                </div>
+                
+                <div class="q-field" id="optionsContainer" style="display: none;">
+                    <label>Antwort-Optionen</label>
+                    <div id="newOptions"></div>
+                    <button class="add-option-btn" onclick="addNewOption()">+ Option hinzufügen</button>
+                </div>
+                
+                <div class="q-field">
+                    <label>
+                        <input type="checkbox" id="newRequired" checked> 
+                        Erforderlich (Pflichfrage)
+                    </label>
+                </div>
+                
+                <button class="btn btn-success" onclick="addQuestion()" style="width: 100%; margin-top: 12px;">✅ Frage hinzufügen</button>
+            </div>
+            
+            <!-- EXISTIERENDE FRAGEN -->
+            <div id="questionsContainer"></div>
+        </div>
+        
+        <!-- RECHTE SEITE: VORSCHAU & VERWALTUNG -->
+        <div class="panel">
+            <h2>👁️ Vorschau & Verwaltung</h2>
+            <div class="divider"></div>
+            
+            <div style="background: #f0f8ff; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; color: #333;">
+                <strong>📊 Fragen-Statistik:</strong><br>
+                Erforderlich: <span id="requiredCount">5</span> | 
+                Optional: <span id="optionalCount">3</span> | 
+                <span id="totalCount">8</span> insgesamt
+            </div>
+            
+            <h3 style="color: #333; margin-bottom: 15px; font-size: 14px;">📋 Umfrage Vorschau:</h3>
+            <div class="preview-section" id="previewContainer"></div>
+            
+            <h3 style="color: #333; margin: 20px 0 15px; font-size: 14px;">⚡ Schnellaktionen:</h3>
+            <div class="btn-group">
+                <button class="btn btn-info" onclick="exportConfig()">💾 Config exportieren</button>
+                <button class="btn btn-secondary" onclick="importConfig()">📂 Config importieren</button>
+            </div>
+            
+            <div class="btn-group" style="margin-top: 10px;">
+                <button class="btn btn-success" onclick="resetToDefault()">🔄 Auf Standard zurücksetzen</button>
+                <button class="btn btn-primary" onclick="saveAndContinue()">✅ Speichern & weiter</button>
+            </div>
+            
+            <div class="info-box" style="margin-top: 20px;">
+                ✅ Nach dem Speichern erhältst du einen Link zur Umfrage, den du mit deinen Klassenkollegen teilst!
+            </div>
+        </div>
+    </div>
+    
+    <!-- Import Modal -->
+    <div class="modal" id="importModal">
+        <div class="modal-content">
+            <h3>📂 Konfiguration importieren</h3>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Füge hier deine gespeicherte JSON-Konfiguration ein:</p>
+            <textarea id="importData" placeholder='{"questions": [...]}' ></textarea>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-primary" style="flex: 1;" onclick="performImport()">✅ Importieren</button>
+                <button class="btn btn-secondary" style="flex: 1;" onclick="closeImportModal()">❌ Abbrechen</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let questions = [];
+        
+        // Standard-Fragen laden
+        function initDefault() {
+            questions = [
+                {
+                    id: 1,
+                    emoji: '💼',
+                    text: 'Was ist dein aktueller Beruf oder deine berufliche Situation?',
+                    type: 'text',
+                    placeholder: 'z.B. Softwareentwickler, Arzt, Student...',
+                    required: true,
+                    options: []
+                },
+                {
+                    id: 2,
+                    emoji: '✈️',
+                    text: 'Wie viele verschiedene Länder hast du in den letzten 4 Jahren bereist?',
+                    type: 'number',
+                    placeholder: 'z.B. 5',
+                    required: true,
+                    options: []
+                },
+                {
+                    id: 3,
+                    emoji: '🎯',
+                    text: 'Was ist ein neues Hobby oder Interesse von dir?',
+                    type: 'text',
+                    placeholder: 'z.B. Fotografieren, Backen, Wandern...',
+                    required: true,
+                    options: []
+                },
+                {
+                    id: 4,
+                    emoji: '📍',
+                    text: 'In welcher Region/Stadt wohnst du derzeit?',
+                    type: 'text',
+                    placeholder: 'z.B. Berlin, Rhein-Ruhr, Zürich...',
+                    required: true,
+                    options: []
+                },
+                {
+                    id: 5,
+                    emoji: '🗺️',
+                    text: 'Was war dein schönstes oder spannendestes Abenteuer der letzten 4 Jahre?',
+                    type: 'text',
+                    placeholder: 'z.B. Backpacking in Südostasien...',
+                    required: true,
+                    options: []
+                },
+                {
+                    id: 6,
+                    emoji: '🐾',
+                    text: 'Wie viele Haustiere hast du?',
+                    type: 'number',
+                    placeholder: 'z.B. 2',
+                    required: false,
+                    options: []
+                },
+                {
+                    id: 7,
+                    emoji: '⏰',
+                    text: 'Welcher Chronotyp passt zu dir?',
+                    type: 'select',
+                    placeholder: '',
+                    required: false,
+                    options: ['Early Bird (vor 6 Uhr)', 'Normal (6-8 Uhr)', 'Night Owl (nach 8 Uhr)']
+                },
+                {
+                    id: 8,
+                    emoji: '⭐',
+                    text: 'Was ist etwas Überraschtes über dich, das wenige wissen?',
+                    type: 'text',
+                    placeholder: 'z.B. Ich sammle alte Schallplatten...',
+                    required: false,
+                    options: []
+                }
+            ];
+            
+            saveToLocalStorage();
+            render();
+        }
+        
+        function saveToLocalStorage() {
+            localStorage.setItem('classReunionConfig', JSON.stringify(questions));
+        }
+        
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('classReunionConfig');
+            if (saved) {
+                questions = JSON.parse(saved);
+            } else {
+                initDefault();
+            }
+        }
+        
+        function selectType(element, type) {
+            document.querySelectorAll('.type-option').forEach(opt => opt.classList.remove('active'));
+            element.classList.add('active');
+            document.getElementById('newType').value = type;
+            
+            const container = document.getElementById('optionsContainer');
+            container.style.display = type === 'select' ? 'block' : 'none';
+            if (type === 'select' && document.getElementById('newOptions').children.length === 0) {
+                addNewOption();
+            }
+        }
+        
+        function addNewOption() {
+            const container = document.getElementById('newOptions');
+            const index = container.children.length;
+            container.innerHTML += `
+                <div class="option-item">
+                    <input type="text" placeholder="Option ${index + 1}" class="new-option-input">
+                    <button onclick="this.parentElement.remove()">✕</button>
+                </div>
+            `;
+        }
+        
+        function addQuestion() {
+            const emoji = document.getElementById('newEmoji').value || '❓';
+            const text = document.getElementById('newQuestion').value.trim();
+            const type = document.getElementById('newType').value;
+            const required = document.getElementById('newRequired').checked;
+            
+            if (!text) {
+                alert('Bitte gib einen Frage-Text ein!');
+                return;
+            }
+            
+            const options = Array.from(document.querySelectorAll('.new-option-input'))
+                .map(input => input.value.trim())
+                .filter(v => v);
+            
+            if (type === 'select' && options.length === 0) {
+                alert('Bitte füge mindestens eine Option hinzu!');
+                return;
+            }
+            
+            const newQuestion = {
+                id: Math.max(...questions.map(q => q.id), 0) + 1,
+                emoji,
+                text,
+                type,
+                placeholder: '',
+                required,
+                options
+            };
+            
+            questions.push(newQuestion);
+            saveToLocalStorage();
+            
+            // Form zurücksetzen
+            document.getElementById('newEmoji').value = '';
+            document.getElementById('newQuestion').value = '';
+            document.getElementById('newRequired').checked = true;
+            document.getElementById('newType').value = 'text';
+            document.getElementById('optionsContainer').style.display = 'none';
+            document.getElementById('newOptions').innerHTML = '';
+            
+            render();
+        }
+        
+        function deleteQuestion(id) {
+            questions = questions.filter(q => q.id !== id);
+            saveToLocalStorage();
+            render();
+        }
+
+        function moveQuestion(id, direction) {
+            const index = questions.findIndex(q => q.id === id);
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= questions.length) return;
+
+            [questions[index], questions[newIndex]] = [questions[newIndex], questions[index]];
+            saveToLocalStorage();
+            render();
+        }
+        
+        function updateQuestion(id, field, value) {
+            const q = questions.find(q => q.id === id);
+            if (q) {
+                q[field] = value;
+                saveToLocalStorage();
+                render();
+            }
+        }
+        
+        function render() {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = questions.map((q, idx) => `
+                <div class="question-item ${q.required ? 'required' : 'optional'}">
+                    <div class="question-header">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div class="q-number">${idx + 1}</div>
+                            <div>
+                                <div style="font-weight: 600; color: #333;">${q.emoji} ${q.text}</div>
+                                <div style="font-size: 12px; color: #999; margin-top: 4px;">
+                                    ${q.type === 'text' ? '📝 Text' : q.type === 'number' ? '🔢 Zahl' : '📋 Auswahl'} | 
+                                    <span class="status-badge ${q.required ? 'status-required' : 'status-optional'}">
+                                        ${q.required ? 'Erforderlich' : 'Optional'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="q-controls">
+                            <button class="btn-small" onclick="moveQuestion(${q.id}, -1)" ${idx === 0 ? 'disabled style="opacity:0.3;cursor:not-allowed;"' : ''} title="Nach oben">⬆️</button>
+                            <button class="btn-small" onclick="moveQuestion(${q.id}, 1)" ${idx === questions.length - 1 ? 'disabled style="opacity:0.3;cursor:not-allowed;"' : ''} title="Nach unten">⬇️</button>
+                            <button class="btn-small" onclick="editQuestion(${q.id})">✏️ Bearbeiten</button>
+                            <button class="btn-small btn-danger-small" onclick="deleteQuestion(${q.id})">🗑️ Löschen</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            updateStats();
+            updatePreview();
+        }
+        
+        function updateStats() {
+            const required = questions.filter(q => q.required).length;
+            const optional = questions.filter(q => !q.required).length;
+            document.getElementById('requiredCount').textContent = required;
+            document.getElementById('optionalCount').textContent = optional;
+            document.getElementById('totalCount').textContent = questions.length;
+        }
+        
+        function updatePreview() {
+            const html = questions.map(q => `
+                <div class="preview-question">
+                    <div class="preview-label">${q.emoji} ${q.text}</div>
+                    ${q.type === 'select' ? `
+                        <div class="preview-input">
+                            ▼ Auswahl: ${q.options.join(', ')}
+                        </div>
+                    ` : `
+                        <div class="preview-input">
+                            ${q.type === 'number' ? '🔢 ' : ''}${q.placeholder || '(Antwortfeld)'}
+                        </div>
+                    `}
+                </div>
+            `).join('');
+            
+            document.getElementById('previewContainer').innerHTML = html;
+        }
+        
+        function editQuestion(id) {
+            const q = questions.find(q => q.id === id);
+            const newText = prompt('Frage bearbeiten:', q.text);
+            if (newText) {
+                q.text = newText;
+                saveToLocalStorage();
+                render();
+            }
+        }
+        
+        function resetToDefault() {
+            if (confirm('Auf Standard-Fragen zurücksetzen?')) {
+                initDefault();
+            }
+        }
+        
+        function exportConfig() {
+            const config = {
+                version: '1.0',
+                exported: new Date().toISOString(),
+                questions: questions
+            };
+            
+            const json = JSON.stringify(config, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `klassentreffen-config-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+            
+            alert('✅ Konfiguration exportiert!');
+        }
+        
+        function importConfig() {
+            document.getElementById('importModal').classList.add('active');
+        }
+        
+        function closeImportModal() {
+            document.getElementById('importModal').classList.remove('active');
+            document.getElementById('importData').value = '';
+        }
+        
+        function performImport() {
+            try {
+                const data = JSON.parse(document.getElementById('importData').value);
+                questions = data.questions || data;
+                saveToLocalStorage();
+                render();
+                closeImportModal();
+                alert('✅ Konfiguration importiert!');
+            } catch (e) {
+                alert('❌ Fehler: ' + e.message);
+            }
+        }
+        
+        function saveAndContinue() {
+            if (questions.length === 0) {
+                alert('❌ Füge mindestens eine Frage hinzu, bevor du fortfährst!');
+                return;
+            }
+            
+            // Exportiere die Config in localStorage für die Umfrage-Seite
+            localStorage.setItem('activeConfig', JSON.stringify(questions));
+            alert('✅ Konfiguration gespeichert!\n\nDu wirst gleich zur Umfrage-Seite weitergeleitet.');
+            
+            // Erstelle einen Link zur Umfrage-Seite
+            const umfrageLink = window.location.origin + window.location.pathname.replace('admin-fragen-config.html', 'umfrage-profil-creator.html');
+            alert(`📋 Umfrage-Link:\n${umfrageLink}\n\nTeile diesen Link mit deinen Klassenkollegen!`);
+        }
+        
+        // Beim Laden initialisieren
+        window.addEventListener('load', function() {
+            loadFromLocalStorage();
+            render();
+        });
+    </script>
+</body>
+</html>
