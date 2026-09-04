@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klassentreffen - Übersicht</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            max-width: 560px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .links {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .link-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 18px 20px;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .link-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .link-icon {
+            font-size: 28px;
+            flex: 0 0 auto;
+        }
+
+        .link-text {
+            flex: 1;
+        }
+
+        .link-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 15px;
+            margin-bottom: 3px;
+        }
+
+        .link-desc {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .step-badge {
+            flex: 0 0 auto;
+            background: #667eea;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .divider-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #aaa;
+            margin: 22px 0 4px;
+        }
+
+        .divider-label:first-of-type {
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 Klassentreffen</h1>
+        <p class="subtitle">Alle Seiten auf einen Blick</p>
+
+        <div class="divider-label">Vor dem Event (nur du)</div>
+        <div class="links">
+            <a class="link-card" href="admin-fragen-config.html">
+                <span class="link-icon">⚙️</span>
+                <span class="link-text">
+                    <div class="link-title">Fragen bearbeiten</div>
+                    <div class="link-desc">Fragen anlegen, sortieren, löschen</div>
+                </span>
+                <span class="step-badge">1</span>
+            </a>
+            <a class="link-card" href="admin-sammel-panel.html">
+                <span class="link-icon">🎟️</span>
+                <span class="link-text">
+                    <div class="link-title">Admin-Panel</div>
+                    <div class="link-desc">Session starten, Link teilen, Profile live sehen</div>
+                </span>
+                <span class="step-badge">2</span>
+            </a>
+        </div>
+
+        <div class="divider-label">Für die Klasse</div>
+        <div class="links">
+            <a class="link-card" href="umfrage-sammel-eingang.html">
+                <span class="link-icon">📝</span>
+                <span class="link-text">
+                    <div class="link-title">Umfrage</div>
+                    <div class="link-desc">Diesen Link teilst du mit deinen Klassenkameraden</div>
+                </span>
+            </a>
+        </div>
+
+        <div class="divider-label">Am Abend des Treffens</div>
+        <div class="links">
+            <a class="link-card" href="quiz-spiel.html">
+                <span class="link-icon">🎮</span>
+                <span class="link-text">
+                    <div class="link-title">Quiz / Ratespiel</div>
+                    <div class="link-desc">Profile importieren und live raten lassen</div>
+                </span>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
