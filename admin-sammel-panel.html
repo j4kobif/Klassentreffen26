@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klassentreffen - Admin Sammel-Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .panel {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .panel h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .divider {
+            height: 2px;
+            background: #e0e0e0;
+            margin: 20px 0;
+        }
+        
+        .session-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .session-box.inactive {
+            background: #e0e0e0;
+            color: #666;
+        }
+        
+        .session-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+        
+        .session-code {
+            font-size: 36px;
+            font-weight: bold;
+            font-family: monospace;
+            letter-spacing: 5px;
+            margin: 15px 0;
+        }
+        
+        .session-info {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+        
+        .qr-container {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 15px 0;
+        }
+        
+        .qr-code {
+            max-width: 200px;
+            margin: 0 auto;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #667eea;
+        }
+        
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .profile-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .profile-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            transition: all 0.2s;
+        }
+        
+        .profile-item:hover {
+            background: #e8f0ff;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+        
+        .profile-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .profile-time {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .profile-preview {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+            max-height: 60px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        
+        .info-box {
+            background: #e8f4f8;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #333;
+        }
+        
+        .copy-btn {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        
+        .copy-btn:hover {
+            background: #138496;
+        }
+        
+        .status-active {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .status-inactive {
+            display: inline-block;
+            background: #6c757d;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-content h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .profile-detail {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            font-size: 12px;
+            color: #667eea;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .detail-value {
+            color: #333;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 1024px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <!-- Firebase (für geräteübergreifendes Speichern der Sessions/Profile) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    <script>
+        // ⚠️ HIER DEINE FIREBASE-KONFIGURATION EINFÜGEN (dieselbe wie in umfrage-sammel-eingang.html!)
+        const firebaseConfig = {
+            apiKey: "AIzaSyC8s6bWHdZUrPnKmoaO5U3p15HVlNuk-WA",
+            authDomain: "klassentreffen-2026-2ab7d.firebaseapp.com",
+            databaseURL: "https://klassentreffen-2026-2ab7d-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "klassentreffen-2026-2ab7d",
+            storageBucket: "klassentreffen-2026-2ab7d.firebasestorage.app",
+            messagingSenderId: "785566354829",
+            appId: "1:785566354829:web:96365a965baef0edcb81c4"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 Klassentreffen - Admin Panel</h1>
+            <p>Verwalte deine Umfrage-Session und sammle alle Profile</p>
+        </div>
+        
+        <div class="grid-2">
+            <!-- LINKE SEITE: SESSION -->
+            <div class="panel">
+                <h2>🎟️ Umfrage-Session</h2>
+                
+                <div class="info-box">
+                    💡 <strong>So funktioniert's:</strong> Generiere einen Session-Code, teile ihn mit deiner Klasse, und sammle automatisch alle Profile!
+                </div>
+                
+                <div id="sessionBox" class="session-box inactive">
+                    <div class="session-label">Keine aktive Session</div>
+                    <div class="session-code">—</div>
+                    <div class="session-info">Klick "Neue Session" um zu starten</div>
+                </div>
+                
+                <div class="qr-container" id="qrContainer" style="display: none;">
+                    <div style="font-size: 12px; color: #999; margin-bottom: 10px;">QR-Code für Teilnehmer:</div>
+                    <canvas id="qrCode" class="qr-code"></canvas>
+                </div>
+                
+                <div class="btn-group">
+                    <button class="btn btn-success" onclick="createNewSession()">✨ Neue Session</button>
+                    <button class="btn btn-secondary" onclick="copySessionLink()">📋 Link kopieren</button>
+                    <button class="btn btn-danger" onclick="endSession()">⏹️ Session beenden</button>
+                </div>
+                
+                <div class="divider"></div>
+                
+                <h3 style="color: #333; margin-bottom: 15px; font-size: 15px;">📋 Teilnehmer-Link:</h3>
+                <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; word-break: break-all; font-size: 12px; color: #666; margin-bottom: 10px;">
+                    <span id="participantLink">Noch keine Session aktiv</span>
+                </div>
+                <button class="copy-btn" onclick="copyParticipantLink()">📋 Link kopieren</button>
+            </div>
+            
+            <!-- RECHTE SEITE: STATISTIK -->
+            <div class="panel">
+                <h2>📊 Statistiken</h2>
+                
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="profileCount">0</div>
+                        <div class="stat-label">Profile eingegangen</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="questionCount">8</div>
+                        <div class="stat-label">Fragen</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="sessionStatus">—</div>
+                        <div class="stat-label">Status</div>
+                    </div>
+                </div>
+                
+                <div class="divider"></div>
+                
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="exportProfiles()">💾 Alle Profile exportieren</button>
+                    <button class="btn btn-secondary" onclick="refreshProfiles()">🔄 Aktualisieren</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- PROFILE LISTE -->
+        <div class="panel">
+            <h2>👥 Eingegangene Profile</h2>
+            
+            <div class="info-box">
+                ℹ️ Die Profile werden in Echtzeit angezeigt, während Teilnehmer ihre Umfrage absenden.
+            </div>
+            
+            <div class="profile-list" id="profilesList">
+                <div style="text-align: center; color: #999; padding: 40px;">
+                    <div style="font-size: 48px; margin-bottom: 10px;">👀</div>
+                    <div>Noch keine Profile eingegangen</div>
+                    <div style="font-size: 12px; margin-top: 10px;">Starte eine Session und teile den Link mit deiner Klasse!</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Profil-Detail Modal -->
+    <div class="modal" id="profileModal">
+        <div class="modal-content">
+            <h3 id="modalName">Profil</h3>
+            <div id="modalContent"></div>
+            <button class="btn btn-secondary" onclick="closeProfileModal()" style="width: 100%; margin-top: 20px;">Schließen</button>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        let currentSession = null;
+        let sessionProfiles = [];
+        let config = [];
+        let profilesListenerRef = null;
+        
+        // Lade gespeicherte Session (Session-Zuordnung bleibt lokal auf diesem Gerät,
+        // die eigentlichen Fragen/Profile kommen live aus Firebase)
+        function loadSession() {
+            currentSession = localStorage.getItem('currentSessionCode');
+            config = JSON.parse(localStorage.getItem('classReunionConfig')) || getDefaultConfig();
+            
+            if (currentSession) {
+                attachProfilesListener();
+                updateUI();
+            }
+        }
+        
+        function attachProfilesListener() {
+            if (!currentSession) return;
+            if (profilesListenerRef) profilesListenerRef.off();
+            
+            profilesListenerRef = db.ref(`sessions/${currentSession}/profiles`);
+            profilesListenerRef.on('value', snapshot => {
+                const data = snapshot.val() || {};
+                sessionProfiles = Object.keys(data).map(key => ({ ...data[key], _key: key }));
+                updateStats();
+                renderProfiles();
+            });
+        }
+        
+        function getDefaultConfig() {
+            return [
+                { id: 1, emoji: '💼', text: 'Was ist dein aktueller Beruf?', type: 'text', required: true },
+                { id: 2, emoji: '✈️', text: 'Länder bereist (4 Jahre)', type: 'number', required: true },
+                { id: 3, emoji: '🎯', text: 'Neues Hobby', type: 'text', required: true },
+                { id: 4, emoji: '📍', text: 'Region/Stadt', type: 'text', required: true },
+                { id: 5, emoji: '🗺️', text: 'Abenteuer', type: 'text', required: true },
+                { id: 6, emoji: '🐾', text: 'Haustiere', type: 'number', required: false },
+                { id: 7, emoji: '⏰', text: 'Chronotyp', type: 'select', required: false },
+                { id: 8, emoji: '⭐', text: 'Überraschung', type: 'text', required: false }
+            ];
+        }
+        
+        function createNewSession() {
+            const code = generateCode();
+            
+            // Config in Firebase schreiben, damit Teilnehmer auf anderen Geräten sie lesen können
+            db.ref(`sessions/${code}/config`).set(config)
+                .then(() => {
+                    currentSession = code;
+                    sessionProfiles = [];
+                    
+                    localStorage.setItem('currentSessionCode', code);
+                    localStorage.setItem('activeConfig', JSON.stringify(config));
+                    
+                    attachProfilesListener();
+                    updateUI();
+                    generateQRCode();
+                    alert(`✅ Neue Session erstellt: ${code}\n\nTeile den Link mit deiner Klasse!`);
+                })
+                .catch(err => {
+                    alert('❌ Session konnte nicht erstellt werden: ' + err.message + '\n\nHast du die Firebase-Konfiguration eingetragen?');
+                });
+        }
+        
+        function generateCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = '';
+            for (let i = 0; i < 6; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
+        }
+        
+        function generateQRCode() {
+            if (!currentSession) return;
+            
+            const link = getParticipantLink();
+            const container = document.getElementById('qrCode');
+            container.innerHTML = '';
+            
+            new QRCode(container, {
+                text: link,
+                width: 200,
+                height: 200,
+                colorDark: '#667eea',
+                colorLight: '#ffffff'
+            });
+        }
+        
+        function getParticipantLink() {
+            const baseUrl = window.location.href.split('admin-sammel-panel.html')[0];
+            return `${baseUrl}umfrage-sammel-eingang.html?code=${currentSession}`;
+        }
+        
+        function copySessionLink() {
+            if (!currentSession) {
+                alert('Erstelle erst eine neue Session!');
+                return;
+            }
+            const link = getParticipantLink();
+            navigator.clipboard.writeText(link).then(() => {
+                alert('✅ Link kopiert!');
+            });
+        }
+        
+        function copyParticipantLink() {
+            copySessionLink();
+        }
+        
+        function endSession() {
+            if (!currentSession) {
+                alert('Keine aktive Session!');
+                return;
+            }
+            
+            if (confirm('Session wirklich beenden?')) {
+                if (profilesListenerRef) {
+                    profilesListenerRef.off();
+                    profilesListenerRef = null;
+                }
+                localStorage.removeItem('currentSessionCode');
+                currentSession = null;
+                sessionProfiles = [];
+                updateUI();
+                alert('❌ Session beendet (der Link funktioniert dann nicht mehr, die gesammelten Profile bleiben aber in Firebase erhalten)');
+            }
+        }
+        
+        function refreshProfiles() {
+            // Profile kommen bereits live per Firebase-Listener rein; Button bleibt als manuelles Feedback
+            updateUI();
+        }
+        
+        function updateUI() {
+            const sessionBox = document.getElementById('sessionBox');
+            const qrContainer = document.getElementById('qrContainer');
+            
+            if (currentSession) {
+                sessionBox.className = 'session-box';
+                sessionBox.innerHTML = `
+                    <div class="session-label">Aktive Session</div>
+                    <div class="session-code">${currentSession}</div>
+                    <div class="session-info">Bereit für Teilnehmer</div>
+                    <span class="status-active">AKTIV</span>
+                `;
+                qrContainer.style.display = 'block';
+                document.getElementById('participantLink').textContent = getParticipantLink();
+                document.getElementById('sessionStatus').innerHTML = '<span class="status-active">AKTIV</span>';
+            } else {
+                sessionBox.className = 'session-box inactive';
+                sessionBox.innerHTML = `
+                    <div class="session-label">Keine aktive Session</div>
+                    <div class="session-code">—</div>
+                    <div class="session-info">Klick "Neue Session" um zu starten</div>
+                `;
+                qrContainer.style.display = 'none';
+                document.getElementById('participantLink').textContent = 'Noch keine Session aktiv';
+                document.getElementById('sessionStatus').innerHTML = '<span class="status-inactive">INAKTIV</span>';
+            }
+            
+            updateStats();
+            renderProfiles();
+        }
+        
+        function updateStats() {
+            document.getElementById('profileCount').textContent = sessionProfiles.length;
+            document.getElementById('questionCount').textContent = config.length;
+        }
+        
+        function renderProfiles() {
+            if (sessionProfiles.length === 0) {
+                document.getElementById('profilesList').innerHTML = `
+                    <div style="text-align: center; color: #999; padding: 40px;">
+                        <div style="font-size: 48px; margin-bottom: 10px;">👀</div>
+                        <div>Noch keine Profile eingegangen</div>
+                        <div style="font-size: 12px; margin-top: 10px;">Warte auf Teilnehmer...</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            const html = sessionProfiles.map(profile => {
+                const date = new Date(profile.timestamp);
+                const timeStr = date.toLocaleTimeString('de-DE');
+                
+                return `
+                    <div class="profile-item" onclick="showProfileDetail('${profile.name.replace(/'/g, "\\'")}')">
+                        <div class="profile-name">👤 ${profile.name}</div>
+                        <div class="profile-time">⏰ Eingegangen: ${timeStr}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('profilesList').innerHTML = html;
+        }
+        
+        function showProfileDetail(name) {
+            const profile = sessionProfiles.find(p => p.name === name);
+            if (!profile) return;
+            
+            document.getElementById('modalName').textContent = `👤 ${profile.name}`;
+            
+            let html = '';
+            config.forEach(q => {
+                const answer = profile[`q${q.id}`] || '—';
+                html += `
+                    <div class="profile-detail">
+                        <div class="detail-label">${q.emoji} ${q.text}</div>
+                        <div class="detail-value">${answer}</div>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('modalContent').innerHTML = html;
+            document.getElementById('profileModal').classList.add('active');
+        }
+        
+        function closeProfileModal() {
+            document.getElementById('profileModal').classList.remove('active');
+        }
+        
+        function exportProfiles() {
+            if (sessionProfiles.length === 0) {
+                alert('Noch keine Profile zum exportieren!');
+                return;
+            }
+            
+            const data = JSON.stringify(sessionProfiles, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `klassentreffen-profile-${currentSession}-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        // Beim Laden
+        window.addEventListener('load', function() {
+            loadSession();
+        });
+    </script>
+</body>
+</html>
