@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klassentreffen - Quiz Moderator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: url('hintergrund-abiriss.jpg');
+            background-size: cover;
+            background-position: center;
+            opacity: 0.22;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .container { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; }
+        .container.wide { max-width: 1300px; }
+
+        .game-layout { display: flex; gap: 20px; align-items: flex-start; }
+        .game-main { flex: 2; min-width: 0; }
+        .leaderboard-sidebar { flex: 1; min-width: 260px; position: sticky; top: 20px; }
+
+        @media (max-width: 900px) {
+            .game-layout { flex-direction: column; }
+            .leaderboard-sidebar { position: static; width: 100%; }
+        }
+
+        .leaderboard-row {
+            display: flex; justify-content: space-between; padding: 10px 12px;
+            background: #f8f9fa; margin-bottom: 6px; border-radius: 6px; align-items: center; font-size: 14px;
+        }
+        .leaderboard-row.top1 { background: #ffd700; font-weight: bold; }
+        .leaderboard-row.top2 { background: #c0c0c0; }
+        .leaderboard-row.top3 { background: #cd7f32; color: white; }
+        .leaderboard-note { font-size: 12px; color: #999; margin-top: 10px; text-align: center; }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        h1 { color: #667eea; margin-bottom: 8px; text-align: center; }
+        .subtitle { text-align: center; color: #666; margin-bottom: 10px; font-size: 14px; }
+
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px; }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 16px;
+            font-family: monospace;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .btn-primary { background: #667eea; color: white; }
+        .btn-primary:hover { background: #5568d3; transform: translateY(-2px); }
+        .btn-primary:disabled { background: #c5c9e8; cursor: not-allowed; transform: none; }
+
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #218838; }
+
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-secondary:hover { background: #5a6268; }
+
+        .btn-block { width: 100%; padding: 14px; font-size: 16px; }
+
+        .error-message {
+            background: #f8d7da; color: #721c24; padding: 12px;
+            border-radius: 6px; margin-bottom: 15px; display: none;
+        }
+
+        .info-box {
+            background: #e8f4f8; border-left: 4px solid #17a2b8;
+            padding: 15px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; color: #333;
+        }
+
+        .hidden { display: none !important; }
+
+        .stat-row {
+            display: flex; justify-content: space-around; text-align: center;
+            margin-bottom: 20px;
+        }
+        .stat-num { font-size: 28px; font-weight: bold; color: #667eea; }
+        .stat-label { font-size: 12px; color: #999; text-transform: uppercase; }
+
+        .progress-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px;
+        }
+        .progress-header .label { font-weight: 600; color: #333; font-size: 15px; }
+
+        .clue-box {
+            background: #f8f9fa; padding: 15px; margin-bottom: 10px;
+            border-radius: 8px; border-left: 4px solid #e0e0e0;
+        }
+        .clue-box.revealed { background: #e8f4f8; border-left-color: #667eea; }
+        .clue-label { font-weight: 600; color: #333; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+        .clue-text { color: #444; font-size: 16px; }
+        .clue-hidden { color: #aaa; font-style: italic; }
+
+        .solution-banner {
+            background: #fff3cd; border-left: 4px solid #ffc107;
+            padding: 12px 15px; border-radius: 6px; margin: 15px 0; font-size: 14px;
+        }
+
+        .players-panel {
+            margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;
+        }
+        .players-panel h3 { font-size: 14px; color: #333; margin-bottom: 10px; }
+        .qr-box {
+            text-align: center; background: #f8f9fa; border-radius: 10px; padding: 15px; margin: 15px 0;
+        }
+        .qr-box canvas { margin: 0 auto; }
+
+        .history-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 12px; background: #f8f9fa; border-radius: 6px; margin-bottom: 8px; font-size: 13px;
+        }
+        .history-code { font-family: monospace; font-weight: bold; letter-spacing: 1px; color: #333; }
+        .history-date { color: #999; font-size: 11px; }
+        .history-open-btn {
+            padding: 6px 12px; border: none; border-radius: 5px; background: #667eea; color: white;
+            font-size: 12px; cursor: pointer;
+        }
+        .history-open-btn:hover { background: #5568d3; }
+
+        .player-chip {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 12px; border-radius: 20px; font-size: 13px; margin: 3px;
+            background: #f0f0f0; color: #999;
+        }
+        .player-chip.done { background: #d4edda; color: #155724; }
+
+        .controls-row { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+        .controls-row .btn { flex: 1; min-width: 160px; }
+
+        .score-row {
+            display: flex; justify-content: space-between; padding: 12px;
+            background: #f8f9fa; margin-bottom: 8px; border-radius: 6px; align-items: center;
+        }
+        .score-row.top1 { background: #ffd700; font-weight: bold; }
+        .score-row.top2 { background: #c0c0c0; }
+        .score-row.top3 { background: #cd7f32; color: white; }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyC8s6bWHdZUrPnKmoaO5U3p15HVlNuk-WA",
+            authDomain: "klassentreffen-2026-2ab7d.firebaseapp.com",
+            databaseURL: "https://klassentreffen-2026-2ab7d-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "klassentreffen-2026-2ab7d",
+            storageBucket: "klassentreffen-2026-2ab7d.firebasestorage.app",
+            messagingSenderId: "785566354829",
+            appId: "1:785566354829:web:96365a965baef0edcb81c4"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+    </script>
+</head>
+<body>
+    <div class="container wide">
+        <div class="card">
+            <h1>🎭 Steckbrief-Ratespiel</h1>
+            <p class="subtitle">Moderator-Ansicht (für dich / den Beamer)</p>
+        </div>
+
+        <!-- SETUP -->
+        <div class="card" id="setupScreen">
+            <h2 style="color:#333; margin-bottom:15px; font-size:18px;">🔑 Session laden</h2>
+            <div class="info-box">
+                ℹ️ Gib den Session-Code aus dem Admin-Panel ein. Fragen und Profile werden direkt aus eurer Umfrage geladen.
+            </div>
+            <div class="error-message" id="errorMessage"></div>
+            <label for="sessionCode">Session-Code:</label>
+            <input type="text" id="sessionCode" maxlength="6" placeholder="Z.B. ABC123">
+            <button class="btn btn-primary btn-block" onclick="loadSessionData()">📥 Profile & Fragen laden</button>
+
+            <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee;">
+                <h3 style="font-size:14px; color:#333; margin-bottom:10px;">🗂️ Oder eine frühere Session wählen:</h3>
+                <div id="pastSessionsList" style="max-height:220px; overflow-y:auto;">
+                    <p style="color:#999; font-size:13px;">Lädt...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- LOBBY -->
+        <div class="card hidden" id="lobbyScreen">
+            <h2 style="color:#333; margin-bottom:15px; font-size:18px;">✅ Bereit zum Start</h2>
+            <div class="stat-row">
+                <div><div class="stat-num" id="lobbyProfileCount">0</div><div class="stat-label">Steckbriefe</div></div>
+                <div><div class="stat-num" id="lobbyQuestionCount">0</div><div class="stat-label">Fragen je Steckbrief</div></div>
+                <div><div class="stat-num" id="lobbyMaxScore">0</div><div class="stat-label">Max. Punkte je Steckbrief</div></div>
+            </div>
+            <div class="info-box">
+                💡 Punktevergabe: Wer direkt beim ersten Hinweis richtig rät, bekommt die volle Punktzahl. Mit jedem weiteren aufgedeckten Hinweis sinkt die mögliche Punktzahl um 50.
+            </div>
+            <div class="qr-box" id="lobbyQrBox">
+                <div style="font-size:13px; color:#666; margin-bottom:8px;">📱 Jetzt beitreten (Code: <strong id="lobbyCodeLabel">–</strong>):</div>
+                <div id="lobbyQrCode"></div>
+            </div>
+            <div class="players-panel" style="margin-top:0; padding-top:15px;">
+                <h3 id="lobbyPlayersLabel">👥 0 Spieler warten bereits</h3>
+                <div id="lobbyPlayersChips"></div>
+            </div>
+            <button class="btn btn-success btn-block" style="margin-top:20px;" onclick="startQuiz()">🎮 Quiz starten</button>
+        </div>
+
+        <!-- GAME -->
+        <div class="hidden" id="gameScreen">
+            <div class="game-layout">
+                <div class="card game-main">
+                    <div class="progress-header">
+                        <span class="label" id="progressLabel">Steckbrief 1 / 5</span>
+                        <span id="maxScoreLabel" style="font-size:13px; color:#999;"></span>
+                    </div>
+                    <div id="cluesContainer"></div>
+
+                    <div class="solution-banner" id="solutionBanner">
+                        🔒 Lösung ist noch verborgen – decke alle Hinweise auf, um aufzulösen.
+                    </div>
+
+                    <div class="controls-row">
+                        <button class="btn btn-primary" id="revealBtn" onclick="revealNextClue()">💡 Nächster Hinweis</button>
+                        <button class="btn btn-primary hidden" id="solveBtn" onclick="revealSolution()">🔍 Auflösen</button>
+                        <button class="btn btn-success" id="nextBtn" onclick="nextProfile()" disabled>➡️ Nächster Steckbrief</button>
+                    </div>
+
+                    <div class="players-panel">
+                        <h3 id="playersProgressLabel">👥 0 von 0 Spielern haben geraten</h3>
+                        <div id="playersChips"></div>
+                    </div>
+                </div>
+
+                <div class="card leaderboard-sidebar">
+                    <h3 style="color:#333; margin-bottom:12px; font-size:15px;">🏆 Aktuelle Rangliste</h3>
+                    <div id="sidebarLeaderboard"></div>
+                    <div class="leaderboard-note">Aktualisiert sich nach jeder Auflösung</div>
+
+                    <div class="qr-box" id="gameQrBox" style="margin-top:20px;">
+                        <div style="font-size:12px; color:#666; margin-bottom:8px;">📱 Beitreten / wieder einsteigen:</div>
+                        <div id="gameQrCode"></div>
+                        <div style="font-size:11px; color:#999; margin-top:6px;">Code: <strong id="gameCodeLabel">–</strong></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESULTS -->
+        <div class="card hidden" id="resultsScreen">
+            <h2 style="color:#333; margin-bottom:15px; text-align:center;">🏆 Endstand</h2>
+            <div id="resultsContainer"></div>
+            <button class="btn btn-secondary btn-block" style="margin-top:20px;" onclick="location.reload()">🔄 Neues Quiz laden</button>
+        </div>
+    </div>
+
+    <script>
+        let code = null;
+        let config = [];              // Fragen-Konfiguration aus Firebase
+        let profilesMap = {};         // { key: profileData }
+        let stateRef = null;
+        let currentState = null;
+
+        function showError(msg) {
+            const box = document.getElementById('errorMessage');
+            box.textContent = msg;
+            box.style.display = 'block';
+            setTimeout(() => box.style.display = 'none', 5000);
+        }
+
+        window.addEventListener('load', renderPastSessions);
+
+        function renderPastSessions() {
+            db.ref('sessionRegistry').once('value').then(snapshot => {
+                const registry = snapshot.val() || {};
+                const sorted = Object.values(registry).sort((a, b) => b.createdAt - a.createdAt);
+                const container = document.getElementById('pastSessionsList');
+
+                if (sorted.length === 0) {
+                    container.innerHTML = '<p style="color:#999; font-size:13px;">Noch keine Sessions vorhanden</p>';
+                    return;
+                }
+
+                container.innerHTML = sorted.map(entry => {
+                    const date = new Date(entry.createdAt).toLocaleDateString('de-DE', {
+                        day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit'
+                    });
+                    return `
+                        <div class="history-row">
+                            <div>
+                                <div class="history-code">${entry.code}</div>
+                                <div class="history-date">${date}</div>
+                            </div>
+                            <button class="history-open-btn" onclick="loadSessionData('${entry.code}')">📂 Laden</button>
+                        </div>
+                    `;
+                }).join('');
+            }).catch(() => {
+                document.getElementById('pastSessionsList').innerHTML =
+                    '<p style="color:#999; font-size:13px;">Historie nicht verfügbar</p>';
+            });
+        }
+
+        function loadSessionData(codeOverride) {
+            const input = codeOverride || document.getElementById('sessionCode').value.toUpperCase().trim();
+            if (input.length !== 6) {
+                showError('Bitte einen gültigen 6-stelligen Code eingeben.');
+                return;
+            }
+            code = input;
+
+            Promise.all([
+                db.ref(`sessions/${code}/config`).once('value'),
+                db.ref(`sessions/${code}/profiles`).once('value')
+            ]).then(([configSnap, profilesSnap]) => {
+                const cfg = configSnap.val();
+                const profs = profilesSnap.val();
+
+                if (!cfg) {
+                    showError('❌ Kein Session mit diesem Code gefunden.');
+                    return;
+                }
+                if (!profs || Object.keys(profs).length < 2) {
+                    showError('❌ Es müssen mindestens 2 Profile eingereicht worden sein, um zu spielen.');
+                    return;
+                }
+
+                config = cfg;
+                profilesMap = profs;
+
+                const maxScore = 50 * config.length;
+                document.getElementById('lobbyProfileCount').textContent = Object.keys(profilesMap).length;
+                document.getElementById('lobbyQuestionCount').textContent = config.length;
+                document.getElementById('lobbyMaxScore').textContent = maxScore;
+
+                document.getElementById('setupScreen').classList.add('hidden');
+                document.getElementById('lobbyScreen').classList.remove('hidden');
+
+                attachLobbyPlayersListener();
+                generateJoinQRCodes();
+            }).catch(err => showError('❌ Fehler: ' + err.message));
+        }
+
+        function getJoinLink() {
+            const baseUrl = window.location.href.split('quiz-spiel.html')[0];
+            return `${baseUrl}quiz-mitspielen.html?code=${code}`;
+        }
+
+        function generateJoinQRCodes() {
+            const link = getJoinLink();
+
+            document.getElementById('lobbyCodeLabel').textContent = code;
+            document.getElementById('gameCodeLabel').textContent = code;
+
+            const lobbyContainer = document.getElementById('lobbyQrCode');
+            lobbyContainer.innerHTML = '';
+            new QRCode(lobbyContainer, { text: link, width: 160, height: 160, colorDark: '#667eea', colorLight: '#ffffff' });
+
+            const gameContainer = document.getElementById('gameQrCode');
+            gameContainer.innerHTML = '';
+            new QRCode(gameContainer, { text: link, width: 120, height: 120, colorDark: '#667eea', colorLight: '#ffffff' });
+        }
+
+        function attachLobbyPlayersListener() {
+            db.ref(`sessions/${code}/quiz/players`).on('value', snapshot => {
+                const players = snapshot.val() || {};
+                const names = Object.values(players).map(p => p.name);
+
+                document.getElementById('lobbyPlayersLabel').textContent = `👥 ${names.length} Spieler warten bereits`;
+                document.getElementById('lobbyPlayersChips').innerHTML = names.length
+                    ? names.map(n => `<span class="player-chip done">✅ ${n}</span>`).join('')
+                    : '<span style="color:#999; font-size:13px;">Noch niemand beigetreten</span>';
+            });
+        }
+
+        function startQuiz() {
+            const keys = Object.keys(profilesMap);
+            // Zufällige Reihenfolge
+            for (let i = keys.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [keys[i], keys[j]] = [keys[j], keys[i]];
+            }
+
+            const initialState = {
+                started: true,
+                finished: false,
+                currentIndex: 0,
+                revealedCount: 1,
+                solved: false,
+                profileOrder: keys,
+                totalQuestions: config.length,
+                totalProfiles: keys.length
+            };
+
+            // Frisches Spiel: nur alte Guesses zurücksetzen (bereits beigetretene Spieler bleiben erhalten,
+            // sonst verlieren sie beim Punkte-Update ihren Namen, falls sie vor dem Start schon beigetreten sind)
+            db.ref(`sessions/${code}/quiz/guesses`).remove().then(() => {
+                return db.ref(`sessions/${code}/quiz/state`).set(initialState);
+            }).then(() => {
+                document.getElementById('lobbyScreen').classList.add('hidden');
+                document.getElementById('gameScreen').classList.remove('hidden');
+                attachStateListener();
+                refreshLeaderboard();
+            });
+        }
+
+        function attachStateListener() {
+            stateRef = db.ref(`sessions/${code}/quiz/state`);
+            stateRef.on('value', snapshot => {
+                currentState = snapshot.val();
+                if (!currentState) return;
+
+                if (currentState.finished) {
+                    showResults();
+                    return;
+                }
+                renderGame();
+                attachGuessesListener();
+                attachPlayersListener();
+            });
+        }
+
+        function currentProfileKey() {
+            return currentState.profileOrder[currentState.currentIndex];
+        }
+
+        function renderGame() {
+            const profile = profilesMap[currentProfileKey()];
+            const total = config.length;
+            const revealed = currentState.revealedCount;
+            const allRevealed = revealed >= total;
+            const solved = !!currentState.solved;
+
+            document.getElementById('progressLabel').textContent =
+                `Steckbrief ${currentState.currentIndex + 1} / ${currentState.totalProfiles}`;
+            document.getElementById('maxScoreLabel').textContent =
+                `Mögliche Punkte gerade: ${50 * (total - revealed + 1)}`;
+
+            const html = config.map((q, idx) => {
+                const isRevealed = idx < revealed;
+                const value = profile[`q${q.id}`] || '–';
+                return `
+                    <div class="clue-box ${isRevealed ? 'revealed' : ''}">
+                        <div class="clue-label">${q.emoji || ''} ${q.text}</div>
+                        <div class="clue-text">${isRevealed ? value : '<span class="clue-hidden">? noch verdeckt</span>'}</div>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('cluesContainer').innerHTML = html;
+
+            document.getElementById('revealBtn').disabled = allRevealed;
+            document.getElementById('revealBtn').textContent = allRevealed
+                ? '✅ Alle Hinweise aufgedeckt' : '💡 Nächster Hinweis';
+
+            // Lösung bleibt verborgen, bis alle Hinweise da sind UND der Moderator aktiv auflöst
+            const solutionBanner = document.getElementById('solutionBanner');
+            const solveBtn = document.getElementById('solveBtn');
+            if (solved) {
+                solutionBanner.innerHTML = `✅ Aufgelöst: <strong>${profile.name}</strong>`;
+                solveBtn.classList.add('hidden');
+            } else if (allRevealed) {
+                solutionBanner.textContent = '🔒 Lösung ist noch verborgen – klicke auf "Auflösen", sobald alle bereit sind.';
+                solveBtn.classList.remove('hidden');
+                solveBtn.disabled = false;
+            } else {
+                solutionBanner.textContent = '🔒 Lösung ist noch verborgen – decke alle Hinweise auf, um aufzulösen.';
+                solveBtn.classList.add('hidden');
+            }
+
+            document.getElementById('nextBtn').disabled = !solved;
+            document.getElementById('nextBtn').textContent =
+                currentState.currentIndex + 1 >= currentState.totalProfiles
+                    ? '🏁 Quiz beenden & Ergebnisse zeigen'
+                    : '➡️ Nächster Steckbrief';
+        }
+
+        function revealSolution() {
+            const idx = currentState.currentIndex;
+            const total = config.length;
+            const correctKey = currentProfileKey();
+
+            document.getElementById('solveBtn').disabled = true;
+
+            db.ref(`sessions/${code}/quiz/guesses/${idx}`).once('value').then(snapshot => {
+                const guesses = snapshot.val() || {};
+                const updates = {};
+                const scoreIncrements = {};
+
+                Object.entries(guesses).forEach(([pid, g]) => {
+                    if (g.tooLate) return; // schon als "zu spät" markiert, nicht mehr auswerten
+                    const correct = g.guessedKey === correctKey;
+                    const points = correct ? 50 * (total - g.revealedAtGuess + 1) : 0;
+                    updates[`sessions/${code}/quiz/guesses/${idx}/${pid}/correct`] = correct;
+                    updates[`sessions/${code}/quiz/guesses/${idx}/${pid}/points`] = points;
+                    if (points > 0) scoreIncrements[pid] = points;
+                });
+
+                return db.ref().update(updates).then(() => scoreIncrements);
+            }).then(scoreIncrements => {
+                const scorePromises = Object.entries(scoreIncrements).map(([pid, pts]) =>
+                    db.ref(`sessions/${code}/quiz/players/${pid}/totalScore`).transaction(s => (s || 0) + pts)
+                );
+                return Promise.all(scorePromises);
+            }).then(() => {
+                return stateRef.child('solved').set(true);
+            }).then(() => {
+                refreshLeaderboard();
+            });
+        }
+
+        function refreshLeaderboard() {
+            db.ref(`sessions/${code}/quiz/players`).once('value').then(snapshot => {
+                const players = snapshot.val() || {};
+                const sorted = Object.values(players).sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0));
+                const showCount = sorted.length >= 10 ? 10 : sorted.length;
+                const shown = sorted.slice(0, showCount);
+
+                const html = shown.map((p, idx) => {
+                    const rowClass = idx === 0 ? 'top1' : idx === 1 ? 'top2' : idx === 2 ? 'top3' : '';
+                    const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : (idx + 1) + '.';
+                    return `<div class="leaderboard-row ${rowClass}"><span>${medal} ${p.name}</span><span>${p.totalScore || 0}</span></div>`;
+                }).join('');
+
+                document.getElementById('sidebarLeaderboard').innerHTML = html || '<p style="color:#999; font-size:13px;">Noch keine Spieler</p>';
+            });
+        }
+
+        function revealNextClue() {
+            if (currentState.revealedCount >= config.length) return;
+            stateRef.child('revealedCount').set(currentState.revealedCount + 1);
+        }
+
+        function nextProfile() {
+            if (currentState.currentIndex + 1 >= currentState.totalProfiles) {
+                stateRef.update({ finished: true });
+            } else {
+                stateRef.update({
+                    currentIndex: currentState.currentIndex + 1,
+                    revealedCount: 1,
+                    solved: false
+                });
+            }
+        }
+
+        let guessesListenerIndex = null;
+        function attachGuessesListener() {
+            const idx = currentState.currentIndex;
+            if (guessesListenerIndex === idx) return; // schon dran
+            guessesListenerIndex = idx;
+
+            db.ref(`sessions/${code}/quiz/guesses/${idx}`).on('value', snapshot => {
+                const guesses = snapshot.val() || {};
+                renderPlayersPanel(guesses);
+            });
+        }
+
+        let lastPlayers = {};
+        function attachPlayersListener() {
+            db.ref(`sessions/${code}/quiz/players`).on('value', snapshot => {
+                lastPlayers = snapshot.val() || {};
+                db.ref(`sessions/${code}/quiz/guesses/${currentState.currentIndex}`).once('value').then(s => {
+                    renderPlayersPanel(s.val() || {});
+                });
+            });
+        }
+
+        function renderPlayersPanel(guesses) {
+            const playerIds = Object.keys(lastPlayers);
+            const doneCount = playerIds.filter(id => guesses[id]).length;
+
+            document.getElementById('playersProgressLabel').textContent =
+                `👥 ${doneCount} von ${playerIds.length} Spielern haben geraten`;
+
+            const chips = playerIds.map(id => {
+                const name = lastPlayers[id].name;
+                const done = !!guesses[id];
+                return `<span class="player-chip ${done ? 'done' : ''}">${done ? '✅' : '⏳'} ${name}</span>`;
+            }).join('');
+            document.getElementById('playersChips').innerHTML = chips || '<span style="color:#999; font-size:13px;">Noch niemand beigetreten</span>';
+        }
+
+        function showResults() {
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('resultsScreen').classList.remove('hidden');
+
+            db.ref(`sessions/${code}/quiz/players`).once('value').then(snapshot => {
+                const players = snapshot.val() || {};
+                const sorted = Object.values(players).sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0));
+
+                const html = sorted.map((p, idx) => {
+                    const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '  ';
+                    const rowClass = idx === 0 ? 'top1' : idx === 1 ? 'top2' : idx === 2 ? 'top3' : '';
+                    return `<div class="score-row ${rowClass}"><span>${medal} ${p.name}</span><span>${p.totalScore || 0} Punkte</span></div>`;
+                }).join('');
+
+                document.getElementById('resultsContainer').innerHTML = html || '<p style="color:#999;">Keine Spieler beigetreten</p>';
+            });
+        }
+    </script>
+</body>
+</html>
