@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klassentreffen - Mitraten</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: url('hintergrund-abiriss.jpg');
+            background-size: cover;
+            background-position: center;
+            opacity: 0.22;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .container { position: relative; z-index: 1; max-width: 480px; width: 100%; margin: 0 auto; }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        h1 { color: #667eea; margin-bottom: 8px; text-align: center; font-size: 22px; }
+        .subtitle { text-align: center; color: #666; margin-bottom: 20px; font-size: 14px; }
+
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px; }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        input#joinCode {
+            font-family: monospace;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 15px;
+        }
+
+        .btn-primary { background: #667eea; color: white; }
+        .btn-primary:hover { background: #5568d3; }
+        .btn-primary:disabled { background: #c5c9e8; cursor: not-allowed; }
+        .btn-block { width: 100%; padding: 14px; }
+
+        .error-message {
+            background: #f8d7da; color: #721c24; padding: 12px;
+            border-radius: 6px; margin-bottom: 15px; display: none;
+        }
+
+        .hidden { display: none !important; }
+
+        .center-text { text-align: center; color: #666; padding: 30px 10px; }
+        .loader {
+            border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%;
+            width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .progress-label { text-align: center; font-weight: 600; color: #333; margin-bottom: 15px; }
+
+        .clue-box {
+            background: #f8f9fa; padding: 14px; margin-bottom: 10px;
+            border-radius: 8px; border-left: 4px solid #667eea;
+        }
+        .clue-label { font-weight: 600; color: #333; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+        .clue-text { color: #444; font-size: 15px; }
+
+        .points-hint {
+            text-align: center; font-size: 13px; color: #856404;
+            background: #fff3cd; padding: 10px; border-radius: 6px; margin-bottom: 15px;
+        }
+
+        .guess-list {
+            max-height: 240px; overflow-y: auto; border: 2px solid #e0e0e0;
+            border-radius: 6px; margin-bottom: 15px;
+        }
+        .guess-option {
+            padding: 12px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 15px;
+        }
+        .guess-option:last-child { border-bottom: none; }
+        .guess-option:hover { background: #f0f0f0; }
+        .guess-option.selected { background: #667eea; color: white; }
+
+        .feedback-box {
+            padding: 20px; border-radius: 10px; text-align: center; font-size: 16px; font-weight: 600;
+        }
+        .feedback-box.correct { background: #d4edda; color: #155724; }
+        .feedback-box.incorrect { background: #f8d7da; color: #721c24; }
+
+        .score-row {
+            display: flex; justify-content: space-between; padding: 12px;
+            background: #f8f9fa; margin-bottom: 8px; border-radius: 6px; align-items: center;
+        }
+        .score-row.me { border: 2px solid #667eea; }
+        .score-row.top1 { background: #ffd700; font-weight: bold; }
+        .score-row.top2 { background: #c0c0c0; }
+        .score-row.top3 { background: #cd7f32; color: white; }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyC8s6bWHdZUrPnKmoaO5U3p15HVlNuk-WA",
+            authDomain: "klassentreffen-2026-2ab7d.firebaseapp.com",
+            databaseURL: "https://klassentreffen-2026-2ab7d-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "klassentreffen-2026-2ab7d",
+            storageBucket: "klassentreffen-2026-2ab7d.firebasestorage.app",
+            messagingSenderId: "785566354829",
+            appId: "1:785566354829:web:96365a965baef0edcb81c4"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>🎭 Wer bin ich?</h1>
+            <p class="subtitle">Live mitraten und Punkte sammeln</p>
+        </div>
+
+        <!-- JOIN -->
+        <div class="card" id="joinScreen">
+            <div class="error-message" id="errorMessage"></div>
+            <label for="joinCode">Session-Code:</label>
+            <input type="text" id="joinCode" maxlength="6" placeholder="Z.B. ABC123">
+            <label for="joinName">Dein Name:</label>
+            <input type="text" id="joinName" placeholder="Wie sollen wir dich in der Bestenliste nennen?">
+            <button class="btn btn-primary btn-block" onclick="joinGame()">🚀 Beitreten</button>
+        </div>
+
+        <!-- WAITING -->
+        <div class="card hidden" id="waitingScreen">
+            <div class="center-text">
+                <div class="loader"></div>
+                <p>Warte auf den Moderator, bis das Quiz startet...</p>
+            </div>
+        </div>
+
+        <!-- GAME -->
+        <div class="card hidden" id="gameScreen">
+            <div class="progress-label" id="progressLabel">Steckbrief 1 / 5</div>
+            <div id="cluesContainer"></div>
+
+            <!-- Guessing UI -->
+            <div id="guessSection">
+                <div class="points-hint" id="pointsHint">Jetzt raten: mögliche Punkte anzeigen</div>
+                <input type="text" id="guessSearch" placeholder="Namen suchen..." oninput="renderGuessList()">
+                <div class="guess-list" id="guessList"></div>
+                <button class="btn btn-primary btn-block" id="confirmGuessBtn" onclick="confirmGuess()" disabled>✅ Diese Person auswählen</button>
+            </div>
+
+            <!-- Feedback after guess -->
+            <div id="feedbackSection" class="hidden">
+                <div class="feedback-box" id="feedbackBox"></div>
+                <p class="center-text" style="padding:15px 10px 0;">Warte auf die anderen und den Moderator...</p>
+            </div>
+        </div>
+
+        <!-- RESULTS -->
+        <div class="card hidden" id="resultsScreen">
+            <h2 style="color:#333; margin-bottom:15px; text-align:center;">🏆 Endstand</h2>
+            <div id="resultsContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        let code = null;
+        let playerId = null;
+        let playerName = null;
+        let config = [];
+        let profilesMap = {};
+        let stateListenerAttached = false;
+        let lastRenderedIndex = -1;
+        let selectedGuessKey = null;
+        let hasGuessedCurrent = false;
+
+        function showError(msg) {
+            const box = document.getElementById('errorMessage');
+            box.textContent = msg;
+            box.style.display = 'block';
+            setTimeout(() => box.style.display = 'none', 5000);
+        }
+
+        window.addEventListener('load', () => {
+            const params = new URLSearchParams(window.location.search);
+            const codeParam = params.get('code');
+            if (codeParam) document.getElementById('joinCode').value = codeParam;
+        });
+
+        function joinGame() {
+            const inputCode = document.getElementById('joinCode').value.toUpperCase().trim();
+            const name = document.getElementById('joinName').value.trim();
+
+            if (inputCode.length !== 6) { showError('Bitte einen gültigen 6-stelligen Code eingeben.'); return; }
+            if (!name) { showError('Bitte gib deinen Namen ein.'); return; }
+
+            code = inputCode;
+            playerName = name;
+
+            // Eigene Spieler-ID pro Gerät/Session merken (überlebt Reload)
+            const storageKey = `quizPlayerId-${code}`;
+            playerId = localStorage.getItem(storageKey);
+            if (!playerId) {
+                playerId = 'p' + Date.now() + Math.floor(Math.random() * 10000);
+                localStorage.setItem(storageKey, playerId);
+            }
+
+            Promise.all([
+                db.ref(`sessions/${code}/config`).once('value'),
+                db.ref(`sessions/${code}/profiles`).once('value'),
+                db.ref(`sessions/${code}/quiz/players`).once('value')
+            ]).then(([configSnap, profilesSnap, playersSnap]) => {
+                if (!configSnap.val()) { showError('❌ Session nicht gefunden.'); return; }
+                config = configSnap.val();
+                profilesMap = profilesSnap.val() || {};
+                const existingPlayers = playersSnap.val() || {};
+
+                // Name-Eindeutigkeit prüfen (eigener Wiedereinstieg mit demselben Namen ist erlaubt)
+                const nameTaken = Object.entries(existingPlayers).some(([pid, p]) =>
+                    pid !== playerId && p.name && p.name.trim().toLowerCase() === playerName.trim().toLowerCase()
+                );
+                if (nameTaken) {
+                    showError('❌ Dieser Name ist schon vergeben. Bitte wähle einen anderen Namen.');
+                    return;
+                }
+
+                // Spieler registrieren (Score bei Wiedereinstieg erhalten)
+                const playerRef = db.ref(`sessions/${code}/quiz/players/${playerId}`);
+                playerRef.once('value').then(snap => {
+                    if (!snap.exists()) {
+                        playerRef.set({ name: playerName, totalScore: 0 });
+                    } else {
+                        playerRef.update({ name: playerName });
+                    }
+                });
+
+                document.getElementById('joinScreen').classList.add('hidden');
+                document.getElementById('waitingScreen').classList.remove('hidden');
+                attachStateListener();
+            }).catch(err => showError('❌ Fehler: ' + err.message));
+        }
+
+        function attachStateListener() {
+            if (stateListenerAttached) return;
+            stateListenerAttached = true;
+
+            db.ref(`sessions/${code}/quiz/state`).on('value', snapshot => {
+                const state = snapshot.val();
+                if (!state || !state.started) {
+                    document.getElementById('waitingScreen').classList.remove('hidden');
+                    document.getElementById('gameScreen').classList.add('hidden');
+                    return;
+                }
+                if (state.finished) {
+                    showResults();
+                    return;
+                }
+
+                document.getElementById('waitingScreen').classList.add('hidden');
+                document.getElementById('resultsScreen').classList.add('hidden');
+                document.getElementById('gameScreen').classList.remove('hidden');
+
+                renderGame(state);
+            });
+        }
+
+        function renderGame(state) {
+            const profileKey = state.profileOrder[state.currentIndex];
+            const profile = profilesMap[profileKey];
+            const total = config.length;
+            const revealed = state.revealedCount;
+            const solved = !!state.solved;
+
+            document.getElementById('progressLabel').textContent =
+                `Steckbrief ${state.currentIndex + 1} / ${state.totalProfiles}`;
+
+            const html = config.slice(0, revealed).map(q => `
+                <div class="clue-box">
+                    <div class="clue-label">${q.emoji || ''} ${q.text}</div>
+                    <div class="clue-text">${profile[`q${q.id}`] || '–'}</div>
+                </div>
+            `).join('');
+            document.getElementById('cluesContainer').innerHTML = html;
+
+            const possiblePoints = 50 * (total - revealed + 1);
+            document.getElementById('pointsHint').textContent = `Bei richtigem Tipp jetzt: ${possiblePoints} Punkte`;
+
+            // Bei neuem Steckbrief: UI zurücksetzen
+            if (lastRenderedIndex !== state.currentIndex) {
+                lastRenderedIndex = state.currentIndex;
+                selectedGuessKey = null;
+                hasGuessedCurrent = false;
+                document.getElementById('guessSearch').value = '';
+                document.getElementById('confirmGuessBtn').disabled = true;
+                renderGuessList();
+            }
+
+            db.ref(`sessions/${code}/quiz/guesses/${state.currentIndex}/${playerId}`).once('value').then(snap => {
+                const myGuess = snap.exists() ? snap.val() : null;
+
+                if (myGuess && solved) {
+                    // Getippt UND aufgelöst -> Ergebnis zeigen
+                    showFeedback(myGuess);
+                } else if (myGuess && !solved) {
+                    // Getippt, aber noch nicht aufgelöst -> neutral warten
+                    hasGuessedCurrent = true;
+                    showWaitingForReveal();
+                } else if (!myGuess && solved) {
+                    // Zeit abgelaufen, nichts getippt -> Auflösung trotzdem zeigen, 0 Punkte
+                    hasGuessedCurrent = true;
+                    document.getElementById('guessSection').classList.add('hidden');
+                    document.getElementById('feedbackSection').classList.remove('hidden');
+                    const box = document.getElementById('feedbackBox');
+                    box.className = 'feedback-box incorrect';
+                    box.textContent = `⏱️ Kein Tipp abgegeben – die Lösung war ${profile.name} (0 Punkte)`;
+                } else {
+                    // Noch nicht getippt, noch nicht aufgelöst -> normale Rate-UI
+                    document.getElementById('guessSection').classList.remove('hidden');
+                    document.getElementById('feedbackSection').classList.add('hidden');
+                }
+            });
+        }
+
+        function renderGuessList() {
+            const filter = document.getElementById('guessSearch').value.toLowerCase();
+            const entries = Object.entries(profilesMap)
+                .filter(([key, p]) => p.name.toLowerCase().includes(filter));
+
+            const html = entries.map(([key, p]) => `
+                <div class="guess-option ${key === selectedGuessKey ? 'selected' : ''}" onclick="selectGuess('${key}')">
+                    ${p.name}
+                </div>
+            `).join('');
+            document.getElementById('guessList').innerHTML = html || '<div style="padding:12px; color:#999;">Keine Treffer</div>';
+        }
+
+        function selectGuess(key) {
+            selectedGuessKey = key;
+            renderGuessList();
+            document.getElementById('confirmGuessBtn').disabled = false;
+        }
+
+        function confirmGuess() {
+            if (!selectedGuessKey || hasGuessedCurrent) return;
+            hasGuessedCurrent = true;
+            document.getElementById('confirmGuessBtn').disabled = true;
+
+            db.ref(`sessions/${code}/quiz/state`).once('value').then(stateSnap => {
+                const state = stateSnap.val();
+                const currentIndex = state.currentIndex;
+                const revealed = state.revealedCount;
+                const tooLate = !!state.solved; // Moderator hat schon aufgelöst, während getippt wurde
+
+                const guessRef = db.ref(`sessions/${code}/quiz/guesses/${currentIndex}/${playerId}`);
+
+                // Nur der rohe Tipp wird gespeichert - Punkte berechnet der Moderator erst beim Auflösen,
+                // damit niemand (auch nicht kurz) vorher etwas über richtig/falsch erfährt.
+                // Doppel-Guess verhindern (z.B. Doppelklick oder zwei Tabs)
+                guessRef.transaction(existing => {
+                    if (existing) return; // schon vorhanden -> nichts überschreiben
+                    if (tooLate) {
+                        return {
+                            playerName: playerName,
+                            guessedKey: selectedGuessKey,
+                            guessedName: profilesMap[selectedGuessKey].name,
+                            correct: false,
+                            points: 0,
+                            revealedAtGuess: revealed,
+                            tooLate: true
+                        };
+                    }
+                    return {
+                        playerName: playerName,
+                        guessedKey: selectedGuessKey,
+                        guessedName: profilesMap[selectedGuessKey].name,
+                        revealedAtGuess: revealed
+                    };
+                }).then(result => {
+                    const guessData = result.snapshot.val();
+                    if (guessData.tooLate) {
+                        showFeedback(guessData);
+                    } else {
+                        showWaitingForReveal();
+                    }
+                });
+            });
+        }
+
+        function showWaitingForReveal() {
+            document.getElementById('guessSection').classList.add('hidden');
+            document.getElementById('feedbackSection').classList.remove('hidden');
+            const box = document.getElementById('feedbackBox');
+            box.className = 'feedback-box';
+            box.style.background = '#e8f4f8';
+            box.style.color = '#333';
+            box.textContent = '✅ Dein Tipp ist gespeichert! Punktzahl gibt es, sobald der Moderator auflöst.';
+        }
+
+        function showFeedback(guessData) {
+            document.getElementById('guessSection').classList.add('hidden');
+            document.getElementById('feedbackSection').classList.remove('hidden');
+
+            const box = document.getElementById('feedbackBox');
+            if (guessData.tooLate) {
+                box.className = 'feedback-box incorrect';
+                box.textContent = `⏱️ Zu spät getippt – der Moderator hatte schon aufgelöst (0 Punkte)`;
+            } else if (guessData.correct) {
+                box.className = 'feedback-box correct';
+                box.textContent = `✅ Richtig! +${guessData.points} Punkte`;
+            } else {
+                box.className = 'feedback-box incorrect';
+                box.textContent = `❌ Leider falsch (getippt: ${guessData.guessedName}) – 0 Punkte`;
+            }
+        }
+
+        function showResults() {
+            document.getElementById('waitingScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('resultsScreen').classList.remove('hidden');
+
+            db.ref(`sessions/${code}/quiz/players`).once('value').then(snapshot => {
+                const players = snapshot.val() || {};
+                const sorted = Object.entries(players).sort((a, b) => (b[1].totalScore || 0) - (a[1].totalScore || 0));
+
+                const html = sorted.map(([id, p], idx) => {
+                    const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '  ';
+                    const rowClass = (idx === 0 ? 'top1 ' : idx === 1 ? 'top2 ' : idx === 2 ? 'top3 ' : '') + (id === playerId ? 'me' : '');
+                    return `<div class="score-row ${rowClass}"><span>${medal} ${p.name}${id === playerId ? ' (du)' : ''}</span><span>${p.totalScore || 0} Punkte</span></div>`;
+                }).join('');
+
+                document.getElementById('resultsContainer').innerHTML = html || '<p style="color:#999;">Keine Spieler</p>';
+            });
+        }
+    </script>
+</body>
+</html>
